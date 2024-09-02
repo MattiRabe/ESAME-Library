@@ -202,11 +202,11 @@ public class LibraryManager {
 		List<String> l =  readers.values().stream().flatMap(r->r.getRentals().values().stream())
 		.map(Rental::getIdBook).distinct().collect(Collectors.toList());
 
-		for(String id: books.keySet()){
-			if(!l.contains(id)){
-				if(books.get(id)!=null) books.remove(id);
-				if(numCopies.get(books.get(id).getTitle())!=null)numCopies.remove(books.get(id).getTitle());
-			}
+		List<String> compl = books.keySet().stream().filter(s->l.contains(s)==false).collect(Collectors.toList());
+
+		for(String id: compl){
+			if(numCopies.get(books.get(id).getTitle())!=null)numCopies.remove(books.get(id).getTitle());
+			books.remove(id);
 		}
     }
     	
