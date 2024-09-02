@@ -1,5 +1,7 @@
 package it.polito.library;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -11,6 +13,7 @@ public class LibraryManager {
 	
 	private TreeMap<String, Book> books = new TreeMap<>();
 	private TreeMap<String, Integer> numCopies = new TreeMap<>(); 
+	private TreeMap<String, Integer> numRentals = new TreeMap<>(); 
 	private TreeMap<String, Reader> readers = new TreeMap<>();
 	    
     // R1: Readers and Books 
@@ -91,7 +94,9 @@ public class LibraryManager {
 	 * @throws LibException  an exception if the book is not present in the archive
 	 */
     public String getAvailableBook(String bookTitle) throws LibException {
-        return null;
+		if(!numCopies.containsKey(bookTitle))throw new LibException();
+        return books.values().stream().filter(b->b.getTitle().equals(bookTitle) && b.isAvailable()==true)
+		.sorted(Comparator.comparing(Book::getId)).map(Book::getId).findFirst().orElse("Non disponibile");
     }   
 
     /**
@@ -104,7 +109,23 @@ public class LibraryManager {
 	 * if the reader is already renting a book, or if the book copy is already rented
 	 */
 	public void startRental(String bookID, String readerID, String startingDate) throws LibException {
-    }
+		if(!readers.containsKey(readerID)) throw new LibException();
+		if(!books.containsKey(bookID)) throw new LibException();
+		if(readers.get(readerID).IsAvailable()==false || books.get(bookID).isAvailable()==false) throw new LibException();
+		readers.get(readerID).addRental(new Rental(bookID, readerID, startingDate, books.get(bookID)));
+
+		readers.get(readerID).setAvailability(false);
+		books.get(bookID).setAvailability(false);
+
+		if(!numRentals.containsKey(books.get(bookID).getTitle())){
+			numRentals.put(books.get(bookID).getTitle(), 1);
+		}
+		else{
+			int num = numRentals.get(books.get(bookID).getTitle());
+			numRentals.put(books.get(bookID).getTitle(), num+1);
+		}
+
+	}
     
 	/**
 	 * Ends a rental of a specific book copy for a specific reader
@@ -116,6 +137,11 @@ public class LibraryManager {
 	 * if the reader is not renting a book, or if the book copy is not rented
 	 */
     public void endRental(String bookID, String readerID, String endingDate) throws LibException {
+		if(!readers.containsKey(readerID)) throw new LibException();
+		if(!books.containsKey(bookID)) throw new LibException();
+		readers.get(readerID).getRentals().get(bookID).setEnd(endingDate);
+		readers.get(readerID).setAvailability(true);
+		books.get(bookID).setAvailability(true);
     }
     
     
@@ -129,7 +155,9 @@ public class LibraryManager {
 	* if the reader is not renting a book, or if the book copy is not rented
 	*/
     public SortedMap<String, String> getRentals(String bookID) throws LibException {
-        return null;
+        return readers.values().stream().flatMap(r->r.getRentals().values().stream())
+		.filter(r->r.getIdBook().equals(bookID))
+		.collect(Collectors.toMap(Rental::getIdReader, Rental::toString, (p1, p2)->p1, TreeMap::new));
     }
     
     
@@ -141,6 +169,16 @@ public class LibraryManager {
 	* @param donatedTitles It takes in input book titles in the format "First title,Second title"
 	*/
     public void receiveDonation(String donatedTitles) {
+		String[] s = donatedTitles.split(",");
+		for(String st: s){
+			if(numCopies.containsKey(st)){
+				int num = numCopies.get(st);
+				numCopies.put(st, num+1);
+			}
+			else numCopies.put(st, 1);
+			Book b = new Book(st);
+			books.put(b.getId(), b);
+		}
     }
     
     // R4: Archive Management
@@ -152,7 +190,8 @@ public class LibraryManager {
 
 	*/
     public Map<String, String> getOngoingRentals() {
-        return null;
+        return readers.values().stream().flatMap(r->r.getRentals().values().stream())
+		.filter(r->r.getEndDate()==null).collect(Collectors.toMap(Rental::getIdReader, Rental::getIdBook));
     }
     
     /**
@@ -160,6 +199,17 @@ public class LibraryManager {
 	* 
 	*/
     public void removeBooks() {
+		List<String> l =  readers.values().stream().flatMap(r->r.getRentals().values().stream())
+		.map(Rental::getIdBook).distinct().collect(Collectors.toList());
+
+		for(String title: books.keySet()){
+			if(!l.contains(title)){
+				numCopies.remove(title);
+				for(Book b : books.values()){
+					if(b.getTitle().equals(title)) books.remove(b.getId());
+				}
+			}
+		}
     }
     	
     // R5: Stats
@@ -171,7 +221,9 @@ public class LibraryManager {
 	* @return the uniqueID of the reader with the highest number of rentals
 	*/
     public String findBookWorm() {
-        return null;
+        Reader r =readers.values().stream().sorted(Comparator.comparing(Reader::getRentalsSize).reversed())
+		.findFirst().orElse(null);
+		return r.getName()+" "+r.getSurname();
     }
     
     /**
@@ -180,7 +232,7 @@ public class LibraryManager {
 	* @return the map linking a title with the number of rentals
 	*/
     public Map<String,Integer> rentalCounts() {
-        return null;
+    	return numRentals;
     }
 
 }

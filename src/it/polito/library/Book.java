@@ -27,16 +27,10 @@ public class Book {
         return available;
     }
 
-    public void setRented(){
-        available=false;
+    public void setAvailability(Boolean status){
+        this.available=status;
     }
 
-    public void setAvailable(){
-        available=true;
-    }
 
-    
-
-    
 
 }
