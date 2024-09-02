@@ -3,9 +3,15 @@ package it.polito.library;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 
 public class LibraryManager {
+	
+	private TreeMap<String, Book> books = new TreeMap<>();
+	private TreeMap<String, Integer> numCopies = new TreeMap<>(); 
+	private TreeMap<String, Reader> readers = new TreeMap<>();
 	    
     // R1: Readers and Books 
     
@@ -19,7 +25,14 @@ public class LibraryManager {
 	 * @return the ID of the book added 
 	 */
     public String addBook(String title) {
-        return null;
+		if(numCopies.containsKey(title)){
+			int num = numCopies.get(title);
+			numCopies.put(title, num+1);
+		}
+		else numCopies.put(title, 1);
+		Book b = new Book(title);
+		books.put(b.getId(), b);
+        return b.getId();
     }
     
     /**
@@ -30,7 +43,7 @@ public class LibraryManager {
 	 * @return a map of the titles liked to the number of available copies
 	 */
     public SortedMap<String, Integer> getTitles() {    	
-        return null;
+        return numCopies;
     }
     
     /**
@@ -39,7 +52,7 @@ public class LibraryManager {
 	 * @return a set of the titles liked to the number of available copies
 	 */
     public Set<String> getBooks() {    	    	
-        return null;
+        return books.keySet().stream().collect(Collectors.toSet());
     }
     
     /**
@@ -49,6 +62,8 @@ public class LibraryManager {
 	 * @param surname last name of the reader
 	 */
     public void addReader(String name, String surname) {
+		Reader r = new Reader(name, surname);
+		readers.put(r.getId(), r);
     }
     
     
@@ -60,7 +75,8 @@ public class LibraryManager {
 	 * @throws LibException if the readerID is not present in the archive
 	 */
     public String getReaderName(String readerID) throws LibException {
-        return null;
+		if(!readers.containsKey(readerID)) throw new LibException();
+        return readers.get(readerID).getName()+ " " +readers.get(readerID).getSurname();
     }    
     
     
