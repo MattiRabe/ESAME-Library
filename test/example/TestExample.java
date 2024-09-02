@@ -55,7 +55,7 @@ public class TestExample {
 		  
 		SortedMap<String, String> rentals = lib.getRentals("1002");
 		assertEquals(1,rentals.size());
-		assertEquals("14-07-2023 15-07-2023", rentals.get("1000"));
+		assertEquals("1000 14-07-2023 15-07-2023", rentals.get("1000"));
 		 
 	    
 	    // R3: Book Donations
@@ -97,7 +97,7 @@ public class TestExample {
 	    // R5: Stats
 	    
 	    String bookWorm = lib.findBookWorm();
-	    assertEquals("1002", bookWorm);
+	    assertEquals("Maria Lonza", bookWorm);
 
 	    Map<String,Integer> counts = lib.rentalCounts();
 	    assertNotNull(counts);

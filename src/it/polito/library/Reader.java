@@ -17,6 +17,7 @@ public class Reader {
         this.name = name;
         this.surname = surname;
         this.id=Integer.toString(BASE+INCREMENTER++);
+        this.available=true;
     }
 
     public String getId() {

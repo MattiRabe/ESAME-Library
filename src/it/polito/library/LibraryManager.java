@@ -96,7 +96,7 @@ public class LibraryManager {
     public String getAvailableBook(String bookTitle) throws LibException {
 		if(!numCopies.containsKey(bookTitle))throw new LibException();
         return books.values().stream().filter(b->b.getTitle().equals(bookTitle) && b.isAvailable()==true)
-		.sorted(Comparator.comparing(Book::getId)).map(Book::getId).findFirst().orElse("Non disponibile");
+		.sorted(Comparator.comparing(Book::getId)).map(Book::getId).findFirst().orElse("Not available");
     }   
 
     /**
@@ -202,12 +202,10 @@ public class LibraryManager {
 		List<String> l =  readers.values().stream().flatMap(r->r.getRentals().values().stream())
 		.map(Rental::getIdBook).distinct().collect(Collectors.toList());
 
-		for(String title: books.keySet()){
-			if(!l.contains(title)){
-				numCopies.remove(title);
-				for(Book b : books.values()){
-					if(b.getTitle().equals(title)) books.remove(b.getId());
-				}
+		for(String id: books.keySet()){
+			if(!l.contains(id)){
+				if(books.get(id)!=null) books.remove(id);
+				if(numCopies.get(books.get(id).getTitle())!=null)numCopies.remove(books.get(id).getTitle());
 			}
 		}
     }
